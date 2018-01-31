@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'set'
+
+require 'wikio'
+
+# Walk the path of first links on wikipedia pages
+# @param src @String - Wikipedia Url
+# @param dst @string - Wikipedia Url
+def walk(src, dst)
+  visited = Set.new([src])
+  current = src
+  count = 0
+
+  while true
+    if current == dst
+      puts "#{src} -> #{dst} in #{count} steps"
+      break
+    end
+    STDERR.puts "#{src} -> #{current}"
+    current = Wikio.get_first_link(current)
+    if visited.include?(current)
+      puts "Cycle detected for #{src} at node #{current}"
+      break
+    end
+    visited.add(current)
+    count += 1
+  end
+end
+
+options = {dst: 'Philosophy'}
+OptionParser.new do |opts|
+  opts.banner = "Usage: wikio --dst=<destination_article> <src1> <src2> ..."
+
+  opts.on('-dst', '--dst DESTINATION', 'Destination article') do |dst|
+   options[:dst] = Wikio.get_wiki_url(dst)
+  end
+end.parse!
+
+puts "Searching for #{options[:dst]}"
+ARGV.map do |term|
+  Wikio.get_wiki_url(term)
+end.map do |url|
+  Thread.new { walk(url, options[:dst]) }
+end.map do |thread|
+  thread.join
+end
