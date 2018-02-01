@@ -1,15 +1,16 @@
 require 'json'
 require 'net/http'
-require 'nokogiri'
 require 'uri'
 
-# Resources
-# - https://stackoverflow.com/questions/27457977/searching-wikipedia-using-api
+require 'nokogiri'
 
 module Wikio
 
   WIKIPEDIA_API_URL = 'https://en.wikipedia.org/w/api.php'
   WIKIPEDIA_DOMAIN = 'https://en.wikipedia.org'
+
+  # Return the wikipedia link for a given search term
+  # @param term [String]
   def self.get_wiki_url(term)
     params = {
       action: 'opensearch',
@@ -24,6 +25,9 @@ module Wikio
     return JSON.parse(res)[3][0]
   end
 
+  # Retrieve the first link on a wikipedia article
+  # @param wiki_url [String]
+  # @return [String]
   def self.get_first_link(wiki_url)
     uri = URI(wiki_url)
     body = Net::HTTP.get(uri)
